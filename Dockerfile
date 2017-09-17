@@ -1,14 +1,33 @@
-# Start from a Ubuntu image with the latest version
-FROM nilbot/alpine:dev
+#
+# Dockerfile for ShadowVPN
+#
 
-MAINTAINER Nilbot <admin@nilbot.net>
+FROM alpine
+MAINTAINER nilbot <help@nilbot.net>
 
-# Get source
-RUN git clone https://github.com/nilbot/shadowvpn.git && \
-    cd shadowvpn && \
-    git submodule update --init --recursive && \
-    ./autogen.sh && \
-    ./configure --enable-static && \
-    make
+RUN apk add -U autoconf \
+	automake \
+	build-base \
+	gawk \
+	git \
+	iptables \
+	libtool \
+	linux-headers \
+	&& git clone --recursive https://github.com/vimagick/ShadowVPN.git \
+	&& cd ShadowVPN \
+	&& ./autogen.sh \
+	&& ./configure --enable-static --sysconfdir=/etc \
+	&& make install \
+	&& cd .. \
+	&& rm -rf ShadowVPN \
+	&& apk del autoconf \
+	automake \
+	build-base \
+	gawk \
+	git \
+	libtool \
+	linux-headers
 
-ENTRYPOINT ["/shadowvpn/src/shadowvpn"]
+EXPOSE 53/udp
+
+CMD shadowvpn -c /etc/shadowvpn/server.conf
